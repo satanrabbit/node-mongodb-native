@@ -3,8 +3,12 @@ From driver version **1.2** we introduced a new connection Class that has the sa
 This is to ensure that we present a recognizable front for all our API's. This does not mean that your existing application will break, 
 but rather that we encourage you to use the new connection api to simplify your application development.
 
+从 **1.2** 版的驱动开始，我们引入了一个新的连接类，这是在我们所有的官方驱动中提供的统一的类名。这确保我们提供一个可用于所有API的入口。这并不意味着您现有的项目都将中断（不可用会不会更好些？），但是我们更倾向于鼓励您使用新的连接API去简化您的应用开发。
+
 Furthermore, we are making the new connection class **MongoClient** that acknowledges all writes to MongoDB, in contrast to the existing connection class 
 DB that has acknowledgements turned off. Let's take a tour of the MongoClient functions.
+
+此外，我们编写了一个新的连接类 **MongoCilent**，该类被确认完全为MongoDB所写，同时，对于已存在的连接类 **DB** 已经被确认不再支持。
 
     MongoClient = function(server, options);
 
@@ -19,6 +23,8 @@ DB that has acknowledgements turned off. Let's take a tour of the MongoClient fu
 Outlined above is the complete MongoClient interface. The methods **open**, **close** and **db** work 
 very similar to the existing methods on the **Db** class. The main difference is that the constructor is missing the **database name** from Db. Let's show a simple connection using **open** as a code example speaks a thousand words.
 
+以上概述就是MongoClient的全部接口。方法**open**，**close** 和 **db** 非常类似于 **Db** 类中已存在的方法。同Db类最主要的不同在于构造器不再需要 **数据库名**
+
     var MongoClient = require('mongodb').MongoClient
       , Server = require('mongodb').Server;
 
@@ -31,23 +37,33 @@ very similar to the existing methods on the **Db** class. The main difference is
 
 Notice that you configure the MongoClient just as you would have done the Db object. The main difference is that you access the db instances using the **db** method on the MongoClient object instead of using the Db instance directly as you would previously. MongoClient supports the same options as the previous Db instance you would have created.
 
-So, with a minimal change in our app, we can apply the new MongoClient connection code. But there is more and one direction you might consider int the future. That is the mongodb connection string.
+注意，您的对MongoClient的配置同您对Db对象所做的一样。最大的不同在于，在MongoClient对象中您需要在使用 **db** 法进入db实例，取代以前直接使用Db实例对象。MongoClient 支持您以前已经创建的Db实例中相同的参数
 
-## The URL connection format
+So, with a minimal change in our app, we can apply the new MongoClient connection code. But there is more and one direction you might consider in the future. That is the mongodb connection string.
+
+因此，我们只需要做很小的改动就可以应用新的MOngoClient连接器去编码，但是以后您应当主要并直接它。下面是mongodb的连接字符串。
+
+## The URL connection format (URL 连接格式)
 
     mongodb://[username:password@]host1[:port1][,host2[:port2],...[,hostN[:portN]]][/[database][?options]]
 
 The URL format is unified across official drivers from 10gen with some options not supported on some drivers due to natural reasons. The ones not supported by the Node.js driver are left out for simplicities sake.
 
-### Basic parts of the url 
+该URL格式被统一应用于10gen公司提供的官方驱动中，但是部分参数由于很自然的原因没有被部分驱动所支持。其中一个就是因为一个很简单的原因在Node.js的驱动中被抛弃。
+
+### Basic parts of the url (URL 的基础部分)
   * **mongodb://** is a required prefix to identify that this is a string in the standard connection format.
-
+  * **mongodb://** 是在标准连接格式中必须的标识符前缀。
   * **username:password@** is optional. If given, the driver will attempt to login to a database after connecting to a database server.
+  * **username:password@** 是可选的，如果给出，驱动将尝试在同数据库服务建立连接后登录数据库。
   * **host1** is the only required part of the URI. It identifies either a hostname, IP address, or unix domain socket
+  * **host1** 是URL中唯一一个必须的部分。它可以是域名，IP地址或者是unix domain socket。 
   * **:portX** is optional and defaults to :27017 if not provided.
-  * **/database** is the name of the database to login to and thus is only relevant if the username:password@ syntax is used. If not specified the "admin" database will be used by default.
+  * **:portX** 是可选的，默认是 :27017。
+  * **/database** is the name of the database to login to and this is only relevant if the username:password@ syntax is used. If not specified the "admin" database will be used by default.
+  * **/database** 是将要登录的数据库名，并且如果已经给出username:password@ 参数，那么数据库是唯一确定的。如果没有规定管理员，那么将使用默认的数据库(test);
   * **?options** are connection options. Note that if database is absent there is still a / required between the last host and the ? introducing the options. Options are name=value pairs and the pairs are separated by "&". For any unrecognized or unsupported option, a driver should log a warning and continue processing. A driver should not support any options that are not explicitly defined in this specification. This is in order to reduce the likelihood that different drivers will support overlapping that differ in small but incompatible ways (like different name, different values, or different default value).
-
+  * **?options** 是连接参数，注意，如果数据库不存在被 *?* 分隔的前一个的主机上，那么*?*将引入一个新的连接参数。该参数是"键=值"形式的键值对组合，键值对间被"&"分隔。对于任何未被确认的和或未被支持的参数，驱动讲记录一个警告，并且继续运行。一个驱动不支持的参数，在说明中并没有明确的指出。这是为了降低不同的驱动会支持差别很小但是矛盾的重复连接的可能性。
 ### Replica set configuration:
 * **replicaSet=name**
     * The driver verifies that the name of the replica set it connects to matches this name. Implies that the hosts given are a seed list, and the driver will attempt to find all members of the set.
